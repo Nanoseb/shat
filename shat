@@ -1,0 +1,31 @@
+#!/bin/bash
+# Simple network chat
+# license WTFPL
+
+port=31415
+ip="$1"
+name="$USER"
+
+open=$(nmap -sT $ip -p $port  | grep "$port/tcp.*open")
+
+txt=Connected
+if [ "$open" ]
+then
+  while true;
+  do
+    echo -e "\e[34m$name\e[0m:$txt\r"
+    read txt
+  done | nc -l -p $port
+
+else
+  echo "waiting for user"
+  nc -l -p $port 2> /dev/null
+  sleep 1
+
+  while true;
+  do
+    echo -e "\e[34m$name\e[0m:$txt\r"
+    read txt
+  done | nc $ip $port
+
+fi
