@@ -1,31 +1,47 @@
 #!/bin/bash
-# Simple network chat
+# Simple encrypted network chat
 # license WTFPL
 
 port=31415
 ip="$1"
 name="$USER"
+export passwordshat=salut
+
+
+txt=Connected
+
+crypt () {
+    echo -e  "\e[34m$name\e[0m: $1" | openssl aes-256-cbc -a -salt -in /dev/stdin -out /dev/stdout -pass env:passwordshat
+}
+
+uncrypt () {
+    echo "$1" | openssl aes-256-cbc -d -a -in /dev/stdin -out /dev/stdout -pass env:passwordshat
+}
+
+export -f uncrypt
 
 open=$(nmap -sT $ip -p $port  | grep "$port/tcp.*open")
 
-txt=Connected
 if [ "$open" ]
 then
-  while true;
-  do
-    echo -e "\e[34m$name\e[0m:$txt\r"
-    read txt
-  done | nc -l -p $port
+    while true;
+    do
+        crypt "$txt"
+        read txt
+    done | nc -l -p $port 2>&1 | xargs -I '{}' -n1 bash -c 'uncrypt "{}"' 
 
 else
-  echo "waiting for user"
-  nc -l -p $port 2> /dev/null
-  sleep 1
+    echo "waiting for user"
+    nc -l -p $port 2> /dev/null
+    sleep 0.5
 
-  while true;
-  do
-    echo -e "\e[34m$name\e[0m:$txt\r"
-    read txt
-  done | nc $ip $port
+    while true;
+    do
+        crypt "$txt"
+        read txt
+    done | nc $ip $port 2>&1 | xargs -I '{}' -n1 bash -c 'uncrypt "{}"'
 
 fi
+
+
+# vim: ai ts=4 sw=4 et sts=4 ft=sh
