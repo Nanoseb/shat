@@ -11,11 +11,11 @@ export passwordshat=salut
 txt=Connected
 
 crypt () {
-    echo -e  "\e[34m$name\e[0m: $1" | openssl aes-256-cbc -a -salt -in /dev/stdin -out /dev/stdout -pass env:passwordshat
+    echo -e  "\e[34m$name\e[0m: $1" | openssl enc -aes-256-cbc -a -salt -in /dev/stdin -out /dev/stdout -pass env:passwordshat | sed ':a;N;$!ba;s/\n/;/g'
 }
 
 uncrypt () {
-    echo "$1" | openssl aes-256-cbc -d -a -in /dev/stdin -out /dev/stdout -pass env:passwordshat
+    echo "$1" | sed 's/;/\n/g' | openssl enc -aes-256-cbc -base64 -d -a -in /dev/stdin -out /dev/stdout -pass env:passwordshat
 }
 
 export -f uncrypt
