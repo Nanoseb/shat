@@ -10,15 +10,15 @@ export passwordshat=salut
 
 txt=Connected
 
-crypt () {
+encrypt () {
     echo -e  "\e[34m$name\e[0m: $1" | openssl enc -aes-256-cbc -a -salt -in /dev/stdin -out /dev/stdout -pass env:passwordshat | sed ':a;N;$!ba;s/\n/;/g'
 }
 
-uncrypt () {
-    echo "$1" | sed 's/;/\n/g' | openssl enc -aes-256-cbc -base64 -d -a -in /dev/stdin -out /dev/stdout -pass env:passwordshat
+decrypt () {
+    sed 's/;/\n/g' <<<"$1" | openssl enc -aes-256-cbc -d -a -in /dev/stdin -out /dev/stdout -pass env:passwordshat
 }
 
-export -f uncrypt
+export -f decrypt
 
 open=$(nmap -sT $ip -p $port  | grep "$port/tcp.*open")
 
@@ -26,9 +26,9 @@ if [ "$open" ]
 then
     while true;
     do
-        crypt "$txt"
+        encrypt "$txt"
         read txt
-    done | nc -l -p $port 2>&1 | xargs -I '{}' -n1 bash -c 'uncrypt "{}"' 
+    done | nc -l -p $port 2>&1 | xargs -I '{}' -n1 bash -c 'decrypt "{}"' 
 
 else
     echo "waiting for user"
@@ -37,9 +37,9 @@ else
 
     while true;
     do
-        crypt "$txt"
+        encrypt "$txt"
         read txt
-    done | nc $ip $port 2>&1 | xargs -I '{}' -n1 bash -c 'uncrypt "{}"'
+    done | nc $ip $port 2>&1 | xargs -I '{}' -n1 bash -c 'decrypt "{}"'
 
 fi
 
