@@ -40,7 +40,6 @@ else
         encrypt "$txt"
         read txt
     done | nc $ip $port 2>&1 | xargs -I '{}' -n1 bash -c 'decrypt "{}"'
-
 fi
 
 
